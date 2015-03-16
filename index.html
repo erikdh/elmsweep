@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Elmsweep</title>
+  <script type="text/javascript" src="elm.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link href="http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+  <h1>Elmsweep</h1>
+
+  <div class="esw-buttons esw-noselect">
+    <div id="smallbutton" class="esw-cell esw-cell-up esw-button">-</div><div id="mediumbutton" class="esw-cell esw-cell-up esw-button">=</div><div id="largebutton" class="esw-cell esw-cell-up esw-button">+</div>
+  </div>
+
+  <div class="esw-left" id="elmsweep"></div>
+
+  <script type="text/javascript">
+    // Get an empty <div>
+    var div = document.getElementById('elmsweep');
+      
+    // Embed the Elm program in that <div>
+    var elmsweep = Elm.embed(Elm.Elmsweep, div, {initGame: [0, 0, 0, 0]});
+
+    var gameArray = [
+      { button: "smallbutton",
+        w: 9,
+        h: 9,
+        n: 10
+      },
+      { button: "mediumbutton",
+        w: 16,
+        h: 16,
+        n: 40
+      },
+      { button: "largebutton",
+        w: 30,
+        h: 16,
+        n: 99
+      }];
+
+    function setGame(w, h, n) {
+      return function() {
+        var seed = Math.floor(Math.random() * Math.pow(2, 51));
+        elmsweep.ports.initGame.send([w, h, n, seed]);
+      };
+    }
+
+    // Setup medium game
+    setGame(16, 16, 40)();
+
+    // Setup game buttons
+    for (var i = 0; i < gameArray.length; i++) {
+      document.getElementById(gameArray[i].button).onclick = setGame(
+                              gameArray[i].w, gameArray[i].h, gameArray[i].n)
+    }
+    // Disable context menu for the div
+    div.oncontextmenu = function(e) {
+    e.preventDefault();}
+  </script>
+
+  </body>
+
+</html>
