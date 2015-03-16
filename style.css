@@ -1,0 +1,104 @@
+.esw-left {
+    text-align: left;
+}
+
+.esw-noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+      
+.esw-rotate-90 {
+    -ms-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+      
+.esw-table {
+    font-weight: bold;
+    background-color: #383838;
+    text-align: center;
+    display: inline-block;
+}
+
+html {
+    font-family: "Helvetica Neue", Sans-serif;
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+      
+.esw-status {
+    display: inline-block;
+    color: #D8D8D8;
+}
+      
+.esw-screen {
+    width: 40px;
+    margin-left: 20px;
+    margin-right: 20px;
+    display: inline-block;
+}
+
+.esw-rows {
+}
+
+.esw-row {
+    overflow: auto;
+    white-space: nowrap;
+}
+
+.esw-cell {
+    color: #404040;
+    background-color: #D8D8D8;
+    text-align: center;
+    vertical-align: middle;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-style: solid;
+    border-color: #A8A8A8;
+    border-width: 2px;
+    line-height: 20px;
+}
+
+.esw-cell-up:hover {
+    background-color: #C8C8C8;
+}
+
+.esw-cell-down {
+    background-color: #B8B8B8;
+}
+
+.esw-buttons {
+    font-weight: bold;
+    display: table-row;
+}
+
+.esw-button {
+    text-align: middle;
+}
+
+.esw-bomb:before {
+    font-family: FontAwesome;
+    content: "\f1e2";
+}
+
+.esw-explode:before {
+    font-family: FontAwesome;
+    content: "\f1e2";
+    color: #800000;
+}
+
+.esw-wrong:before {
+    font-family: FontAwesome;
+    content: "\f024";
+    color: #800000;
+}
+
+.esw-flag:before {
+    font-family: FontAwesome;
+    content: "\f024";
+}
