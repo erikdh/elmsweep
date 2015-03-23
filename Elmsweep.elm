@@ -57,7 +57,6 @@ type ClickCommand
     | Show Int
     | ShowAdjacent Int
 
-
 type Status
     = Play
     | Won
@@ -72,12 +71,11 @@ show i = Click Nothing (Show i)
 showAdjacent: Int -> Command
 showAdjacent i = Click Nothing (ShowAdjacent i)
 
-
-type alias Cell =
-    {flag: Bool, seen: Bool, safe: Bool, adj: Int}
+type alias Cell = {flag: Bool, seen: Bool, safe: Bool, adj: Int}
 type Board = Board Int Int (Array Cell)
 type alias GameState = {timeStart: Time, timeReached: Time,
                         board: Board, seed: R.Seed, nmine: Int, status: Status}
+type alias Pos = Int
 
 makeBoard: Int -> Int -> List Bool -> Board
 makeBoard w h mines =
@@ -137,7 +135,7 @@ width (Board w _ _) = w
 height: Board -> Int
 height (Board _ h _) = h
 
-adjacent: Int -> Board -> List Int
+adjacent: Pos -> Board -> List Pos
 adjacent i (Board w h arr) =
     let x = rem i w
         y = i // w
@@ -204,7 +202,7 @@ statusScreen str =
         [H.div [HA.class "esw-rotate-90"]
              [H.span [HA.class "esw-noselect"] [H.text str]]]
 
-button: Int -> Bool -> Bool -> Cell -> Html
+button: Pos -> Bool -> Bool -> Cell -> Html
 button i done won c =
     let str = fieldString done won c
         down = str /= ""
@@ -275,42 +273,42 @@ update cmd gs =
                       else {gs | timeReached <- t}
            _ -> gs
 
-canShowAdjacent: Int -> Board -> Bool
-canShowAdjacent i bo =
-    case getCell i bo of
-      Just c -> L.length (L.filter (\(i, c0) -> c0.flag) (adjacentCells i bo))
+canShowAdjacent: Pos -> Board -> Bool
+canShowAdjacent p bo =
+    case getCell p bo of
+      Just c -> L.length (L.filter (\(p, c0) -> c0.flag) (adjacentCells p bo))
                 == c.adj
       Nothing -> False
 
-updateClick: ClickCommand -> Int -> Board -> Board
-updateClick cmd i bo =
+updateClick: ClickCommand -> Pos -> Board -> Board
+updateClick cmd p bo =
     case cmd of
-      Show _ -> updateShow [i] bo
-      Flag _ -> updateCell i
+      Show _ -> updateShow [p] bo
+      Flag _ -> updateCell p
                 (\c -> {c | flag <- not c.flag && not c.seen}) bo
       ShowAdjacent _ -> updateShow (L.filter
-                                    (\i -> case getCell i bo of
+                                    (\p -> case getCell p bo of
                                              Just c -> not (c.seen || c.flag)
-                                             _ -> False) (adjacent i bo)) bo
+                                             _ -> False) (adjacent p bo)) bo
 
-updateShowCascadeCell: Int -> Board -> (Board, List Int)
-updateShowCascadeCell i bo =
-    case getCell i bo of
+updateShowCascadeCell: Pos -> Board -> (Board, List Pos)
+updateShowCascadeCell p bo =
+    case getCell p bo of
       Just c -> if not c.seen && not c.flag then
                     if c.adj == 0 then
-                        (showCell i bo, adjacent i bo)
-                    else (showCell i bo, [])
+                        (showCell p bo, adjacent p bo)
+                    else (showCell p bo, [])
                 else  (bo, [])
       Nothing -> (bo, [])
 
-updateShowCascade: List Int -> Set Int -> Board -> Trampoline Board
+updateShowCascade: List Pos -> Set Pos -> Board -> Trampoline Board
 updateShowCascade acc set bo =
      case acc of
-       i::cc -> let (bo0, acc0) = updateShowCascadeCell i bo
-                    acx = L.filter (\i0 -> S.member i0 set) acc0
+       p::cc -> let (bo0, acc0) = updateShowCascadeCell p bo
+                    acx = L.filter (\p0 -> S.member p0 set) acc0
                     (bo1, acc1) =
-                        L.foldl (\i0 (bo2, acc2) ->
-                                 case updateShowCascadeCell i0 bo2 of
+                        L.foldl (\p0 (bo2, acc2) ->
+                                 case updateShowCascadeCell p0 bo2 of
                                    (bo3, acc3) -> (bo3, L.append acc3 acc2))
                                  (bo0, []) acx
                     accn = L.append acc0 acc1
@@ -320,36 +318,36 @@ updateShowCascade acc set bo =
                                                (S.union new set) bo1)
        [] -> TR.Done bo
 
-updateShow: List Int -> Board -> Board
-updateShow is bo =
-    let cs = L.filter (\(i, c) -> not c.seen && not c.flag)
-             (L.filterMap (\i -> M.map ((,) i) (getCell i bo)) is)
-        adj = L.concat (L.map (\(i, c) -> if c.adj == 0
-                                          then adjacent i bo else []) cs)
-        bo0 = L.foldl (\(i, _) bo1 -> showCell i bo1) bo cs
-        done = L.any (\(i, c) -> not c.safe) cs
+updateShow: List Pos -> Board -> Board
+updateShow ps bo =
+    let cs = L.filter (\(p, c) -> not c.seen && not c.flag)
+             (L.filterMap (\p -> M.map ((,) p) (getCell p bo)) ps)
+        adj = L.concat (L.map (\(p, c) -> if c.adj == 0
+                                          then adjacent p bo else []) cs)
+        bo0 = L.foldl (\(p, _) bo1 -> showCell p bo1) bo cs
+        done = L.any (\(p, c) -> not c.safe) cs
     in if done then bo0
        else TR.trampoline (updateShowCascade (S.toList (S.fromList adj))
                                              S.empty bo0)
 
-adjacentCells: Int -> Board -> List (Int, Cell)
-adjacentCells i bo = L.filterMap (\i0 -> M.map ((,) i0) (getCell i0 bo))
-                     (adjacent i bo)
+adjacentCells: Pos -> Board -> List (Pos, Cell)
+adjacentCells p bo = L.filterMap (\p0 -> M.map ((,) p0) (getCell p0 bo))
+                     (adjacent p bo)
 
-updateCell: Int -> (Cell -> Cell) -> Board -> Board
-updateCell i f bo =
+updateCell: Pos -> (Cell -> Cell) -> Board -> Board
+updateCell p f bo =
     case bo of
          Board w h arr ->
-             case A.get i arr of
-               Just c -> Board w h (A.set i (f c) arr)
+             case A.get p arr of
+               Just c -> Board w h (A.set p (f c) arr)
                Nothing -> bo
 
-getCell: Int -> Board -> Maybe Cell
-getCell i (Board w h arr) = A.get i arr
+getCell: Pos -> Board -> Maybe Cell
+getCell p (Board w h arr) = A.get p arr
 
-showCell: Int -> Board -> Board
-showCell i bo =
-    updateCell i (\c -> if not c.flag then {c | seen <- True} else c) bo
+showCell: Pos -> Board -> Board
+showCell p bo =
+    updateCell p (\c -> if not c.flag then {c | seen <- True} else c) bo
 
 -- UTIL
 
