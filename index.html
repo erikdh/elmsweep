@@ -22,9 +22,14 @@
   <script type="text/javascript">
     // Get an empty <div>
     var div = document.getElementById('elmsweep');
-      
+
     // Embed the Elm program in that <div>
     var elmsweep = Elm.embed(Elm.Elmsweep, div, {initGame: [0, 0, 0, 0]});
+
+    function wonlog(result) {
+      console.log("Won game ".concat(result.toString()))
+    }
+    elmsweep.ports.wonGame.subscribe(wonlog);
 
     var gameArray = [
       { button: "smallbutton",

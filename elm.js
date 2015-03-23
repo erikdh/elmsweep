@@ -1789,17 +1789,17 @@ Elm.Elmsweep.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _U.badCase($moduleName,
-         "between lines 327 and 328");
+         "between lines 371 and 372");
       }();
    });
-   var getCell = F2(function (i,
+   var getCell = F2(function (p,
    _v3) {
       return function () {
          switch (_v3.ctor)
          {case "Board":
-            return A2($Array.get,i,_v3._2);}
+            return A2($Array.get,p,_v3._2);}
          _U.badCase($moduleName,
-         "on line 318, column 29 to 40");
+         "on line 362, column 29 to 40");
       }();
    });
    var fieldClass = function (str) {
@@ -1809,7 +1809,8 @@ Elm.Elmsweep.make = function (_elm) {
       "W") ? $Html$Attributes.$class("esw-noselect esw-wrong") : _U.eq(str,
       "X") ? $Html$Attributes.$class("esw-noselect esw-explode") : $Html$Attributes.$class("esw-noselect");
    };
-   var fieldString = F2(function (done,
+   var fieldString = F3(function (done,
+   won,
    c) {
       return function () {
          var _v8 = {ctor: "_Tuple5"
@@ -1824,7 +1825,8 @@ Elm.Elmsweep.make = function (_elm) {
                    {case false: switch (_v8._2)
                         {case false: switch (_v8._3)
                              {case false: return "";
-                                case true: return "B";}
+                                case true:
+                                return won ? "F" : "B";}
                              break;
                            case true: return "F";}
                         break;
@@ -1895,7 +1897,7 @@ Elm.Elmsweep.make = function (_elm) {
                        {case "_Tuple2":
                           return _v19._0 + _v19._1 * w;}
                        _U.badCase($moduleName,
-                       "on line 137, column 31 to 40");
+                       "on line 158, column 31 to 40");
                     }();
                  });
                  var y = i / _v14._0 | 0;
@@ -1915,29 +1917,66 @@ Elm.Elmsweep.make = function (_elm) {
                             0) > -1 && _U.cmp(_v23._1,
                             _v14._1) < 0));}
                        _U.badCase($moduleName,
-                       "on line 142, column 36 to 74");
+                       "on line 163, column 36 to 74");
                     }();
                  },
                  A2(adj,x,y)));
               }();}
          _U.badCase($moduleName,
-         "between lines 135 and 143");
+         "between lines 156 and 164");
       }();
    });
-   var height = function (_v27) {
+   var adjacentCells = F2(function (p,
+   bo) {
+      return A2($List.filterMap,
+      function (p0) {
+         return A2($Maybe.map,
+         F2(function (v0,v1) {
+            return {ctor: "_Tuple2"
+                   ,_0: v0
+                   ,_1: v1};
+         })(p0),
+         A2(getCell,p0,bo));
+      },
+      A2(adjacent,p,bo));
+   });
+   var canShowAdjacent = F2(function (p,
+   bo) {
       return function () {
+         var _v27 = A2(getCell,p,bo);
          switch (_v27.ctor)
-         {case "Board": return _v27._1;}
+         {case "Just":
+            return _U.eq($List.length(A2($List.filter,
+              function (_v29) {
+                 return function () {
+                    switch (_v29.ctor)
+                    {case "_Tuple2":
+                       return _v29._1.flag;}
+                    _U.badCase($moduleName,
+                    "on line 295, column 49 to 56");
+                 }();
+              },
+              A2(adjacentCells,p,bo))),
+              _v27._0.adj);
+            case "Nothing": return false;}
          _U.badCase($moduleName,
-         "on line 132, column 24 to 25");
+         "between lines 294 and 297");
+      }();
+   });
+   var height = function (_v33) {
+      return function () {
+         switch (_v33.ctor)
+         {case "Board": return _v33._1;}
+         _U.badCase($moduleName,
+         "on line 152, column 24 to 25");
       }();
    };
-   var width = function (_v32) {
+   var width = function (_v38) {
       return function () {
-         switch (_v32.ctor)
-         {case "Board": return _v32._0;}
+         switch (_v38.ctor)
+         {case "Board": return _v38._0;}
          _U.badCase($moduleName,
-         "on line 129, column 23 to 24");
+         "on line 149, column 23 to 24");
       }();
    };
    var randomMineIndices = F3(function (n,
@@ -1994,16 +2033,18 @@ Elm.Elmsweep.make = function (_elm) {
                 ,_1: bs};
       }();
    });
-   var GameState = F6(function (a,
+   var GameState = F7(function (a,
    b,
    c,
    d,
    e,
-   f) {
+   f,
+   g) {
       return {_: {}
              ,board: c
              ,nmine: e
              ,seed: d
+             ,sent: g
              ,status: f
              ,timeReached: b
              ,timeStart: a};
@@ -2016,36 +2057,36 @@ Elm.Elmsweep.make = function (_elm) {
              ,_1: b
              ,_2: c};
    });
-   var updateCell = F3(function (i,
+   var updateCell = F3(function (p,
    f,
    bo) {
       return function () {
          switch (bo.ctor)
          {case "Board":
             return function () {
-                 var _v41 = A2($Array.get,
-                 i,
+                 var _v47 = A2($Array.get,
+                 p,
                  bo._2);
-                 switch (_v41.ctor)
+                 switch (_v47.ctor)
                  {case "Just": return A3(Board,
                       bo._0,
                       bo._1,
                       A3($Array.set,
-                      i,
-                      f(_v41._0),
+                      p,
+                      f(_v47._0),
                       bo._2));
                     case "Nothing": return bo;}
                  _U.badCase($moduleName,
-                 "between lines 313 and 315");
+                 "between lines 357 and 359");
               }();}
          _U.badCase($moduleName,
-         "between lines 311 and 315");
+         "between lines 355 and 359");
       }();
    });
-   var showCell = F2(function (i,
+   var showCell = F2(function (p,
    bo) {
       return A3(updateCell,
-      i,
+      p,
       function (c) {
          return $Basics.not(c.flag) ? _U.replace([["seen"
                                                   ,true]],
@@ -2053,19 +2094,19 @@ Elm.Elmsweep.make = function (_elm) {
       },
       bo);
    });
-   var updateShowCascadeCell = F2(function (i,
+   var updateShowCascadeCell = F2(function (p,
    bo) {
       return function () {
-         var _v43 = A2(getCell,i,bo);
-         switch (_v43.ctor)
+         var _v49 = A2(getCell,p,bo);
+         switch (_v49.ctor)
          {case "Just":
-            return $Basics.not(_v43._0.seen) && $Basics.not(_v43._0.flag) ? _U.eq(_v43._0.adj,
+            return $Basics.not(_v49._0.seen) && $Basics.not(_v49._0.flag) ? _U.eq(_v49._0.adj,
               0) ? {ctor: "_Tuple2"
-                   ,_0: A2(showCell,i,bo)
+                   ,_0: A2(showCell,p,bo)
                    ,_1: A2(adjacent,
-                   i,
+                   p,
                    bo)} : {ctor: "_Tuple2"
-                          ,_0: A2(showCell,i,bo)
+                          ,_0: A2(showCell,p,bo)
                           ,_1: _L.fromArray([])} : {ctor: "_Tuple2"
                                                    ,_0: bo
                                                    ,_1: _L.fromArray([])};
@@ -2074,7 +2115,7 @@ Elm.Elmsweep.make = function (_elm) {
                    ,_0: bo
                    ,_1: _L.fromArray([])};}
          _U.badCase($moduleName,
-         "between lines 273 and 279");
+         "between lines 312 and 318");
       }();
    });
    var updateShowCascade = F3(function (acc,
@@ -2089,33 +2130,33 @@ Elm.Elmsweep.make = function (_elm) {
                  bo0 = $._0,
                  acc0 = $._1;
                  var acx = A2($List.filter,
-                 function (i0) {
+                 function (p0) {
                     return A2($Set.member,
-                    i0,
+                    p0,
                     set);
                  },
                  acc0);
                  var $ = A3($List.foldl,
-                 F2(function (i0,_v48) {
+                 F2(function (p0,_v54) {
                     return function () {
-                       switch (_v48.ctor)
+                       switch (_v54.ctor)
                        {case "_Tuple2":
                           return function () {
-                               var _v52 = A2(updateShowCascadeCell,
-                               i0,
-                               _v48._0);
-                               switch (_v52.ctor)
+                               var _v58 = A2(updateShowCascadeCell,
+                               p0,
+                               _v54._0);
+                               switch (_v58.ctor)
                                {case "_Tuple2":
                                   return {ctor: "_Tuple2"
-                                         ,_0: _v52._0
+                                         ,_0: _v58._0
                                          ,_1: A2($List.append,
-                                         _v52._1,
-                                         _v48._1)};}
+                                         _v58._1,
+                                         _v54._1)};}
                                _U.badCase($moduleName,
-                               "between lines 288 and 289");
+                               "between lines 327 and 328");
                             }();}
                        _U.badCase($moduleName,
-                       "between lines 288 and 289");
+                       "between lines 327 and 328");
                     }();
                  }),
                  {ctor: "_Tuple2"
@@ -2130,9 +2171,9 @@ Elm.Elmsweep.make = function (_elm) {
                  var $new = A2($Set.diff,
                  $Set.fromList(accn),
                  set);
-                 return $Trampoline.Continue(function (_v55) {
+                 return $Trampoline.Continue(function (_v61) {
                     return function () {
-                       switch (_v55.ctor)
+                       switch (_v61.ctor)
                        {case "_Tuple0":
                           return A3(updateShowCascade,
                             A2($List.append,
@@ -2141,52 +2182,93 @@ Elm.Elmsweep.make = function (_elm) {
                             A2($Set.union,$new,set),
                             bo1);}
                        _U.badCase($moduleName,
-                       "between lines 293 and 295");
+                       "between lines 332 and 334");
                     }();
                  });
               }();
             case "[]":
             return $Trampoline.Done(bo);}
          _U.badCase($moduleName,
-         "between lines 283 and 296");
+         "between lines 322 and 335");
       }();
    });
-   var updateShow = F2(function (i,
+   var updateShow = F2(function (ps,
    bo) {
       return function () {
-         var $ = function () {
-            var _v57 = A2(getCell,i,bo);
-            switch (_v57.ctor)
-            {case "Just":
+         var cs = A2($List.filter,
+         function (_v63) {
+            return function () {
+               switch (_v63.ctor)
+               {case "_Tuple2":
+                  return $Basics.not(_v63._1.seen) && $Basics.not(_v63._1.flag);}
+               _U.badCase($moduleName,
+               "on line 339, column 35 to 59");
+            }();
+         },
+         A2($List.filterMap,
+         function (p) {
+            return A2($Maybe.map,
+            F2(function (v0,v1) {
                return {ctor: "_Tuple2"
-                      ,_0: $Basics.not(_v57._0.seen) && $Basics.not(_v57._0.flag)
-                      ,_1: _v57._0.adj};
-               case "Nothing":
-               return {ctor: "_Tuple2"
-                      ,_0: false
-                      ,_1: 0};}
-            _U.badCase($moduleName,
-            "between lines 300 and 303");
-         }(),
-         ok = $._0,
-         n = $._1;
-         return ok ? _U.eq(n,
-         0) ? $Trampoline.trampoline(A3(updateShowCascade,
-         A2(adjacent,i,bo),
+                      ,_0: v0
+                      ,_1: v1};
+            })(p),
+            A2(getCell,p,bo));
+         },
+         ps));
+         var adj = $List.concat(A2($List.map,
+         function (_v67) {
+            return function () {
+               switch (_v67.ctor)
+               {case "_Tuple2":
+                  return _U.eq(_v67._1.adj,
+                    0) ? A2(adjacent,
+                    _v67._0,
+                    bo) : _L.fromArray([]);}
+               _U.badCase($moduleName,
+               "between lines 341 and 342");
+            }();
+         },
+         cs));
+         var bo0 = A3($List.foldl,
+         F2(function (_v71,bo1) {
+            return function () {
+               switch (_v71.ctor)
+               {case "_Tuple2":
+                  return A2(showCell,
+                    _v71._0,
+                    bo1);}
+               _U.badCase($moduleName,
+               "on line 343, column 39 to 53");
+            }();
+         }),
+         bo,
+         cs);
+         var done = A2($List.any,
+         function (_v75) {
+            return function () {
+               switch (_v75.ctor)
+               {case "_Tuple2":
+                  return $Basics.not(_v75._1.safe);}
+               _U.badCase($moduleName,
+               "on line 344, column 34 to 44");
+            }();
+         },
+         cs);
+         return done ? bo0 : $Trampoline.trampoline(A3(updateShowCascade,
+         $Set.toList($Set.fromList(adj)),
          $Set.empty,
-         A2(showCell,
-         i,
-         bo))) : A2(showCell,i,bo) : bo;
+         bo0));
       }();
    });
    var updateClick = F3(function (cmd,
-   i,
+   p,
    bo) {
       return function () {
          switch (cmd.ctor)
          {case "Flag":
             return A3(updateCell,
-              i,
+              p,
               function (c) {
                  return _U.replace([["flag"
                                     ,$Basics.not(c.flag) && $Basics.not(c.seen)]],
@@ -2194,9 +2276,25 @@ Elm.Elmsweep.make = function (_elm) {
               },
               bo);
             case "Show":
-            return A2(updateShow,i,bo);}
+            return A2(updateShow,
+              _L.fromArray([p]),
+              bo);
+            case "ShowAdjacent":
+            return A2(updateShow,
+              A2($List.filter,
+              function (p) {
+                 return function () {
+                    var _v83 = A2(getCell,p,bo);
+                    switch (_v83.ctor)
+                    {case "Just":
+                       return $Basics.not(_v83._0.seen || _v83._0.flag);}
+                    return false;
+                 }();
+              },
+              A2(adjacent,p,bo)),
+              bo);}
          _U.badCase($moduleName,
-         "between lines 266 and 269");
+         "between lines 301 and 308");
       }();
    });
    var Cell = F4(function (a,
@@ -2273,13 +2371,14 @@ Elm.Elmsweep.make = function (_elm) {
    h,
    n,
    seed) {
-      return A6(GameState,
+      return A7(GameState,
       0,
       0,
       A2(makeNewBoard,w,h),
       $Random.initialSeed(seed),
       n,
-      Play);
+      Play,
+      false);
    });
    var defaultGame = A4(makeNewGame,
    0,
@@ -2303,7 +2402,8 @@ Elm.Elmsweep.make = function (_elm) {
                            ,["timeStart",0]
                            ,["timeReached",0]
                            ,["seed",seed]
-                           ,["status",Play]],
+                           ,["status",Play]
+                           ,["sent",false]],
          gs);
       }();
    };
@@ -2311,9 +2411,9 @@ Elm.Elmsweep.make = function (_elm) {
       return !_U.eq(gs.status,
       Play);
    };
-   var status = function (_v62) {
+   var status = function (_v85) {
       return function () {
-         switch (_v62.ctor)
+         switch (_v85.ctor)
          {case "Board":
             return function () {
                  var lost = A3($Array.foldl,
@@ -2321,18 +2421,22 @@ Elm.Elmsweep.make = function (_elm) {
                     return r || $Basics.not(c.safe) && c.seen;
                  }),
                  false,
-                 _v62._2);
+                 _v85._2);
                  var won = A3($Array.foldl,
                  F2(function (c,r) {
-                    return r && (c.safe && $Basics.not(c.flag) || $Basics.not(c.safe) && c.flag);
+                    return r && (c.safe && c.seen || $Basics.not(c.safe) && $Basics.not(c.seen));
                  }),
                  true,
-                 _v62._2);
+                 _v85._2);
                  return won ? Won : lost ? Lost : Play;
               }();}
          _U.badCase($moduleName,
-         "between lines 156 and 162");
+         "between lines 177 and 183");
       }();
+   };
+   var ShowAdjacent = function (a) {
+      return {ctor: "ShowAdjacent"
+             ,_0: a};
    };
    var Show = function (a) {
       return {ctor: "Show",_0: a};
@@ -2355,7 +2459,9 @@ Elm.Elmsweep.make = function (_elm) {
               break;
             case "Restart":
             return randomGame(gs);}
-         return gs;
+         return _U.replace([["sent"
+                            ,true]],
+         gs);
       }() : function () {
          switch (cmd.ctor)
          {case "Click":
@@ -2388,7 +2494,19 @@ Elm.Elmsweep.make = function (_elm) {
                       return _U.replace([["board",bo0]
                                         ,["status",status(bo0)]],
                       gs);
-                   }();}
+                   }();
+                 case "ShowAdjacent":
+                 return A2(canShowAdjacent,
+                   cmd._1._0,
+                   gs.board) ? function () {
+                      var bo0 = A3(updateClick,
+                      ShowAdjacent(cmd._1._0),
+                      cmd._1._0,
+                      gs.board);
+                      return _U.replace([["board",bo0]
+                                        ,["status",status(bo0)]],
+                      gs);
+                   }() : gs;}
               break;
             case "InitGame":
             switch (cmd._0.ctor)
@@ -2422,29 +2540,34 @@ Elm.Elmsweep.make = function (_elm) {
              ,_0: a
              ,_1: b};
    });
-   var show = function (i) {
-      return A2(Click,
-      $Maybe.Nothing,
-      Show(i));
-   };
    var flag = function (i) {
       return A2(Click,
       $Maybe.Nothing,
       Flag(i));
    };
-   var click = function (_v85) {
+   var show = function (i) {
+      return A2(Click,
+      $Maybe.Nothing,
+      Show(i));
+   };
+   var showAdjacent = function (i) {
+      return A2(Click,
+      $Maybe.Nothing,
+      ShowAdjacent(i));
+   };
+   var click = function (_v109) {
       return function () {
-         switch (_v85.ctor)
+         switch (_v109.ctor)
          {case "_Tuple2":
             return function () {
-                 switch (_v85._1.ctor)
+                 switch (_v109._1.ctor)
                  {case "Click": return A2(Click,
-                      $Maybe.Just(_v85._0),
-                      _v85._1._1);}
-                 return _v85._1;
+                      $Maybe.Just(_v109._0),
+                      _v109._1._1);}
+                 return _v109._1;
               }();}
          _U.badCase($moduleName,
-         "between lines 39 and 41");
+         "between lines 54 and 56");
       }();
    };
    var clicks = function (s) {
@@ -2468,12 +2591,14 @@ Elm.Elmsweep.make = function (_elm) {
       _L.fromArray([$Html$Attributes.$class("esw-noselect")]),
       _L.fromArray([$Html.text(str)]))]))]));
    };
-   var button = F3(function (i,
+   var button = F4(function (i,
    done,
+   won,
    c) {
       return function () {
-         var str = A2(fieldString,
+         var str = A3(fieldString,
          done,
+         won,
          c);
          var down = !_U.eq(str,"");
          return A2($Html.div,
@@ -2481,6 +2606,11 @@ Elm.Elmsweep.make = function (_elm) {
                       ,$Html$Events.onClick(A2($Signal.send,
                       commands,
                       show(i)))
+                      ,A2($Html$Events.messageOn,
+                      "dblclick",
+                      A2($Signal.send,
+                      commands,
+                      showAdjacent(i)))
                       ,A2($Html$Events.messageOn,
                       "contextmenu",
                       A2($Signal.send,
@@ -2511,7 +2641,7 @@ Elm.Elmsweep.make = function (_elm) {
          var done = won || lost;
          var _raw = gs.board,
          $ = _raw.ctor === "Board" ? _raw : _U.badCase($moduleName,
-         "on line 168, column 27 to 35"),
+         "on line 189, column 27 to 35"),
          w = $._0,
          h = $._1,
          arr = $._2;
@@ -2539,16 +2669,17 @@ Elm.Elmsweep.make = function (_elm) {
                             return A2($Html.div,
                             _L.fromArray([$Html$Attributes.$class("esw-row esw-noselect")]),
                             A2($List.map,
-                            function (_v92) {
+                            function (_v116) {
                                return function () {
-                                  switch (_v92.ctor)
+                                  switch (_v116.ctor)
                                   {case "_Tuple2":
-                                     return A3(button,
-                                       _v92._0,
+                                     return A4(button,
+                                       _v116._0,
                                        done,
-                                       _v92._1);}
+                                       won,
+                                       _v116._1);}
                                   _U.badCase($moduleName,
-                                  "on line 187, column 38 to 53");
+                                  "on line 208, column 38 to 57");
                                }();
                             },
                             row0));
@@ -2571,6 +2702,33 @@ Elm.Elmsweep.make = function (_elm) {
                                                            v[3])} : _U.badPort("an array",
       v);
    }));
+   var gameStates = A3($Signal.foldp,
+   update,
+   defaultGame,
+   $Signal.mergeMany(_L.fromArray([A2($Signal.map,
+                                  InitGame,
+                                  initGame)
+                                  ,clicks($Time.timestamp($Signal.subscribe(commands)))
+                                  ,times])));
+   var wonGame = _P.portOut("wonGame",
+   _P.outgoingSignal(function (v) {
+      return [v._0,v._1,v._2,v._3];
+   }),
+   A2($Signal.map,
+   function (gs) {
+      return {ctor: "_Tuple4"
+             ,_0: width(gs.board)
+             ,_1: height(gs.board)
+             ,_2: gs.nmine
+             ,_3: $Time.inSeconds(gs.timeReached - gs.timeStart)};
+   },
+   A3($Signal.keepIf,
+   function (gs) {
+      return $Basics.not(gs.sent) && _U.eq(gs.status,
+      Won);
+   },
+   defaultGame,
+   gameStates)));
    var main = A2($Signal.map,
    display,
    A3($Signal.foldp,
@@ -2583,6 +2741,7 @@ Elm.Elmsweep.make = function (_elm) {
                                   ,times]))));
    _elm.Elmsweep.values = {_op: _op
                           ,main: main
+                          ,gameStates: gameStates
                           ,commands: commands
                           ,times: times
                           ,click: click
@@ -2593,11 +2752,13 @@ Elm.Elmsweep.make = function (_elm) {
                           ,InitGame: InitGame
                           ,Flag: Flag
                           ,Show: Show
+                          ,ShowAdjacent: ShowAdjacent
                           ,Play: Play
                           ,Won: Won
                           ,Lost: Lost
-                          ,show: show
                           ,flag: flag
+                          ,show: show
+                          ,showAdjacent: showAdjacent
                           ,Cell: Cell
                           ,Board: Board
                           ,GameState: GameState
@@ -2623,10 +2784,12 @@ Elm.Elmsweep.make = function (_elm) {
                           ,fieldString: fieldString
                           ,fieldClass: fieldClass
                           ,update: update
+                          ,canShowAdjacent: canShowAdjacent
                           ,updateClick: updateClick
                           ,updateShowCascadeCell: updateShowCascadeCell
                           ,updateShowCascade: updateShowCascade
                           ,updateShow: updateShow
+                          ,adjacentCells: adjacentCells
                           ,updateCell: updateCell
                           ,getCell: getCell
                           ,showCell: showCell
