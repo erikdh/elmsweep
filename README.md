@@ -8,7 +8,9 @@ icons from Font Awesome.
 http://erikdh.github.io/elmsweep/
 
 Left and right mouse buttons to explore and flag. The top left buttons
-(- = +) changes board size and the central smiley restarts the game.
+(- = +) changes board size and the central smiley restarts the
+game. Double click explores surrounding spaces when the number of
+flags matches the number of surrounding mines.
 
 ## Build
 
