@@ -17,6 +17,7 @@ import Array as A
 import Array (Array)
 import Trampoline as TR
 import Trampoline (Trampoline)
+import Maybe as M
 
 main: Signal Html
 main = Signal.map display
@@ -54,6 +55,7 @@ type Command
 type ClickCommand
     = Flag Int
     | Show Int
+    | ShowAdjacent Int
 
 
 type Status
@@ -61,11 +63,15 @@ type Status
     | Won
     | Lost
 
+flag: Int -> Command
+flag i = Click Nothing (Flag i)
+
 show: Int -> Command
 show i = Click Nothing (Show i)
 
-flag: Int -> Command
-flag i = Click Nothing (Flag i)
+showAdjacent: Int -> Command
+showAdjacent i = Click Nothing (ShowAdjacent i)
+
 
 type alias Cell =
     {flag: Bool, seen: Bool, safe: Bool, adj: Int}
@@ -131,6 +137,7 @@ width (Board w _ _) = w
 height: Board -> Int
 height (Board _ h _) = h
 
+adjacent: Int -> Board -> List Int
 adjacent i (Board w h arr) =
     let x = rem i w
         y = i // w
@@ -154,8 +161,8 @@ gameLost gs = gs.status == Lost
 status: Board -> Status
 status (Board _ _ arr) =
     let won =
-            A.foldl (\c r -> r && ((c.safe && (not c.flag)) ||
-                                   ((not c.safe) && c.flag))) True arr
+            A.foldl (\c r -> r && ((c.safe && c.seen) ||
+                                   ((not c.safe) && (not c.seen)))) True arr
         lost = A.foldl (\c r -> r || ((not c.safe) && c.seen)) False arr
     in if | won -> Won
           | lost -> Lost
@@ -184,7 +191,7 @@ display gs =
                       (\row -> HL.lazy
                        (\row0 -> H.div [HA.class "esw-row esw-noselect"]
                         (L.map
-                         (\(i, c) -> button i done c) row0)) row) rows)]
+                         (\(i, c) -> button i done won c) row0)) row) rows)]
 
 screen: String -> Html
 screen str =
@@ -197,13 +204,14 @@ statusScreen str =
         [H.div [HA.class "esw-rotate-90"]
              [H.span [HA.class "esw-noselect"] [H.text str]]]
 
-button: Int -> Bool -> Cell -> Html
-button i done c =
-    let str = fieldString done c
+button: Int -> Bool -> Bool -> Cell -> Html
+button i done won c =
+    let str = fieldString done won c
         down = str /= ""
     in H.div [HA.class (if down then "esw-cell esw-cell-down"
                   else "esw-cell esw-cell-up"),
             HE.onClick (Signal.send commands (show i)),
+            HE.messageOn "dblclick" (Signal.send commands (showAdjacent i)),
             HE.messageOn "contextmenu" (Signal.send commands (flag i))]
            [H.span [fieldClass str]
                  [H.text (if str == "0" || str == "B" || str == "W" ||
@@ -214,8 +222,8 @@ statusString won lost = if | won -> ":D"
                            | lost -> ":("
                            | otherwise -> ":)"
 
-fieldString: Bool -> Cell -> String
-fieldString done c =
+fieldString: Bool -> Bool -> Cell -> String
+fieldString done won c =
     case (c.seen, c.safe, c.flag, done, c.adj) of
       (True,  True,  _,     _,    adj) -> toString adj
       (True,  False, _,     _,     _) -> "X"
@@ -223,7 +231,7 @@ fieldString done c =
       (False, True,  True,  False, _) -> "F"
       (False, True,  False, _,     _) -> ""
       (False, False, True,  _,     _) -> "F"
-      (False, False, False, True,  _) -> "B"
+      (False, False, False, True,  _) -> if won then "F" else "B"
       (False, False, False, False, _) -> ""
       _                               -> "U"
 
@@ -255,18 +263,35 @@ update cmd gs =
            Click t (Flag i) -> let bo0 = updateClick (Flag i) i gs.board
                                in {gs | board <- bo0
                                       , status <- status bo0}
+           Click t (ShowAdjacent i) ->
+               if canShowAdjacent i gs.board then
+                   let bo0 = updateClick (ShowAdjacent i) i gs.board
+                   in {gs | board <- bo0
+                          , status <- status bo0}
+               else gs
            Restart -> randomGame gs
            InitGame (w, h, n, seed) -> randomGame (makeNewGame w h n seed)
            Timer t -> if gs.timeStart == 0 then gs
                       else {gs | timeReached <- t}
            _ -> gs
 
+canShowAdjacent: Int -> Board -> Bool
+canShowAdjacent i bo =
+    case getCell i bo of
+      Just c -> L.length (L.filter (\(i, c0) -> c0.flag) (adjacentCells i bo))
+                == c.adj
+      Nothing -> False
+
 updateClick: ClickCommand -> Int -> Board -> Board
 updateClick cmd i bo =
     case cmd of
-      Show _ -> updateShow i bo
+      Show _ -> updateShow [i] bo
       Flag _ -> updateCell i
                 (\c -> {c | flag <- not c.flag && not c.seen}) bo
+      ShowAdjacent _ -> updateShow (L.filter
+                                    (\i -> case getCell i bo of
+                                             Just c -> not (c.seen || c.flag)
+                                             _ -> False) (adjacent i bo)) bo
 
 updateShowCascadeCell: Int -> Board -> (Board, List Int)
 updateShowCascadeCell i bo =
@@ -295,16 +320,21 @@ updateShowCascade acc set bo =
                                                (S.union new set) bo1)
        [] -> TR.Done bo
 
-updateShow: Int -> Board -> Board
-updateShow i bo =
-    let (ok, n) = case getCell i bo of
-                    Just c -> (not c.seen && not c.flag, c.adj)
-                    Nothing -> (False, 0)
-    in if ok then
-           if n == 0 then
-               TR.trampoline (updateShowCascade (adjacent i bo) S.empty (showCell i bo))
-           else showCell i bo
-       else bo
+updateShow: List Int -> Board -> Board
+updateShow is bo =
+    let cs = L.filter (\(i, c) -> not c.seen && not c.flag)
+             (L.filterMap (\i -> M.map ((,) i) (getCell i bo)) is)
+        adj = L.concat (L.map (\(i, c) -> if c.adj == 0
+                                          then adjacent i bo else []) cs)
+        bo0 = L.foldl (\(i, _) bo1 -> showCell i bo1) bo cs
+        done = L.any (\(i, c) -> not c.safe) cs
+    in if done then bo0
+       else TR.trampoline (updateShowCascade (S.toList (S.fromList adj))
+                                             S.empty bo0)
+
+adjacentCells: Int -> Board -> List (Int, Cell)
+adjacentCells i bo = L.filterMap (\i0 -> M.map ((,) i0) (getCell i0 bo))
+                     (adjacent i bo)
 
 updateCell: Int -> (Cell -> Cell) -> Board -> Board
 updateCell i f bo =
