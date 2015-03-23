@@ -26,6 +26,20 @@ main = Signal.map display
                            clicks (T.timestamp (Signal.subscribe commands)),
                            times]))
 
+gameStates: Signal GameState
+gameStates = 
+    Signal.foldp update defaultGame
+          (Signal.mergeMany [Signal.map InitGame initGame,
+                             clicks (T.timestamp (Signal.subscribe commands)),
+                             times])
+
+port wonGame: Signal (Int, Int, Int, Time)
+port wonGame = Signal.map (\gs -> (width gs.board, height gs.board, gs.nmine,
+                                         T.inSeconds(gs.timeReached -
+                                                     gs.timeStart)))
+               (Signal.keepIf (\gs -> not gs.sent && gs.status == Won)
+                      defaultGame gameStates)
+
 -- INPUTS
 
 port initGame: Signal (Int, Int, Int, Int)
@@ -73,8 +87,9 @@ showAdjacent i = Click Nothing (ShowAdjacent i)
 
 type alias Cell = {flag: Bool, seen: Bool, safe: Bool, adj: Int}
 type Board = Board Int Int (Array Cell)
-type alias GameState = {timeStart: Time, timeReached: Time,
-                        board: Board, seed: R.Seed, nmine: Int, status: Status}
+type alias GameState =
+    {timeStart: Time, timeReached: Time, board: Board, seed: R.Seed, nmine: Int,
+     status: Status, sent: Bool}
 type alias Pos = Int
 
 makeBoard: Int -> Int -> List Bool -> Board
@@ -93,7 +108,7 @@ makeBoard w h mines =
 
 makeNewGame: Int -> Int -> Int -> Int -> GameState
 makeNewGame w h n seed =
-    GameState 0 0 (makeNewBoard w h) (R.initialSeed seed) n Play
+    GameState 0 0 (makeNewBoard w h) (R.initialSeed seed) n Play False
 
 makeNewBoard: Int -> Int -> Board
 makeNewBoard w h = makeBoard w h (L.repeat (w * h) True)
@@ -127,7 +142,8 @@ randomGame gs =
            , timeStart <- 0
            , timeReached <- 0
            , seed <- seed
-           , status <- Play}
+           , status <- Play
+           , sent <- False}
 
 width: Board -> Int
 width (Board w _ _) = w
@@ -248,7 +264,7 @@ update cmd gs =
         case cmd of
           Restart -> randomGame gs
           InitGame (w, h, n, seed) -> randomGame (makeNewGame w h n seed)
-          _ -> gs
+          _ -> {gs | sent <- True}
     else case cmd of
            Click (Just t) (Show i) ->
                let gs0 = if gs.timeStart == 0 then
