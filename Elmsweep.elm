@@ -20,11 +20,9 @@ import Trampoline (Trampoline)
 import Maybe as M
 
 main: Signal Html
-main = Signal.map display
-       (Signal.foldp update defaultGame
-        (Signal.mergeMany [Signal.map InitGame initGame,
-                           clicks (T.timestamp (Signal.subscribe commands)),
-                           times]))
+main = Signal.map display gameStates
+
+-- INPUTS
 
 gameStates: Signal GameState
 gameStates = 
@@ -32,15 +30,6 @@ gameStates =
           (Signal.mergeMany [Signal.map InitGame initGame,
                              clicks (T.timestamp (Signal.subscribe commands)),
                              times])
-
-port wonGame: Signal (Int, Int, Int, Time)
-port wonGame = Signal.map (\gs -> (width gs.board, height gs.board, gs.nmine,
-                                         T.inSeconds(gs.timeReached -
-                                                     gs.timeStart)))
-               (Signal.keepIf (\gs -> not gs.sent && gs.status == Won)
-                      defaultGame gameStates)
-
--- INPUTS
 
 port initGame: Signal (Int, Int, Int, Int)
 
@@ -57,6 +46,15 @@ click (t, cmd) = case cmd of
 
 clicks: Signal (Time, Command) -> Signal Command
 clicks s = Signal.map click s
+
+-- OUTPUTS
+
+port wonGame: Signal (Int, Int, Int, Time)
+port wonGame = Signal.map (\gs -> (width gs.board, height gs.board, gs.nmine,
+                                         T.inSeconds(gs.timeReached -
+                                                     gs.timeStart)))
+               (Signal.keepIf (\gs -> not gs.sent && gs.status == Won)
+                      defaultGame gameStates)
 
 -- MODEL
 
