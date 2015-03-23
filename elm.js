@@ -1789,7 +1789,7 @@ Elm.Elmsweep.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _U.badCase($moduleName,
-         "between lines 371 and 372");
+         "between lines 369 and 370");
       }();
    });
    var getCell = F2(function (p,
@@ -1799,7 +1799,7 @@ Elm.Elmsweep.make = function (_elm) {
          {case "Board":
             return A2($Array.get,p,_v3._2);}
          _U.badCase($moduleName,
-         "on line 362, column 29 to 40");
+         "on line 360, column 29 to 40");
       }();
    });
    var fieldClass = function (str) {
@@ -1897,7 +1897,7 @@ Elm.Elmsweep.make = function (_elm) {
                        {case "_Tuple2":
                           return _v19._0 + _v19._1 * w;}
                        _U.badCase($moduleName,
-                       "on line 158, column 31 to 40");
+                       "on line 156, column 31 to 40");
                     }();
                  });
                  var y = i / _v14._0 | 0;
@@ -1917,13 +1917,13 @@ Elm.Elmsweep.make = function (_elm) {
                             0) > -1 && _U.cmp(_v23._1,
                             _v14._1) < 0));}
                        _U.badCase($moduleName,
-                       "on line 163, column 36 to 74");
+                       "on line 161, column 36 to 74");
                     }();
                  },
                  A2(adj,x,y)));
               }();}
          _U.badCase($moduleName,
-         "between lines 156 and 164");
+         "between lines 154 and 162");
       }();
    });
    var adjacentCells = F2(function (p,
@@ -1953,14 +1953,14 @@ Elm.Elmsweep.make = function (_elm) {
                     {case "_Tuple2":
                        return _v29._1.flag;}
                     _U.badCase($moduleName,
-                    "on line 295, column 49 to 56");
+                    "on line 293, column 49 to 56");
                  }();
               },
               A2(adjacentCells,p,bo))),
               _v27._0.adj);
             case "Nothing": return false;}
          _U.badCase($moduleName,
-         "between lines 294 and 297");
+         "between lines 292 and 295");
       }();
    });
    var height = function (_v33) {
@@ -1968,7 +1968,7 @@ Elm.Elmsweep.make = function (_elm) {
          switch (_v33.ctor)
          {case "Board": return _v33._1;}
          _U.badCase($moduleName,
-         "on line 152, column 24 to 25");
+         "on line 150, column 24 to 25");
       }();
    };
    var width = function (_v38) {
@@ -1976,7 +1976,7 @@ Elm.Elmsweep.make = function (_elm) {
          switch (_v38.ctor)
          {case "Board": return _v38._0;}
          _U.badCase($moduleName,
-         "on line 149, column 23 to 24");
+         "on line 147, column 23 to 24");
       }();
    };
    var randomMineIndices = F3(function (n,
@@ -2077,10 +2077,10 @@ Elm.Elmsweep.make = function (_elm) {
                       bo._2));
                     case "Nothing": return bo;}
                  _U.badCase($moduleName,
-                 "between lines 357 and 359");
+                 "between lines 355 and 357");
               }();}
          _U.badCase($moduleName,
-         "between lines 355 and 359");
+         "between lines 353 and 357");
       }();
    });
    var showCell = F2(function (p,
@@ -2115,7 +2115,7 @@ Elm.Elmsweep.make = function (_elm) {
                    ,_0: bo
                    ,_1: _L.fromArray([])};}
          _U.badCase($moduleName,
-         "between lines 312 and 318");
+         "between lines 310 and 316");
       }();
    });
    var updateShowCascade = F3(function (acc,
@@ -2153,10 +2153,10 @@ Elm.Elmsweep.make = function (_elm) {
                                          _v58._1,
                                          _v54._1)};}
                                _U.badCase($moduleName,
-                               "between lines 327 and 328");
+                               "between lines 325 and 326");
                             }();}
                        _U.badCase($moduleName,
-                       "between lines 327 and 328");
+                       "between lines 325 and 326");
                     }();
                  }),
                  {ctor: "_Tuple2"
@@ -2182,14 +2182,14 @@ Elm.Elmsweep.make = function (_elm) {
                             A2($Set.union,$new,set),
                             bo1);}
                        _U.badCase($moduleName,
-                       "between lines 332 and 334");
+                       "between lines 330 and 332");
                     }();
                  });
               }();
             case "[]":
             return $Trampoline.Done(bo);}
          _U.badCase($moduleName,
-         "between lines 322 and 335");
+         "between lines 320 and 333");
       }();
    });
    var updateShow = F2(function (ps,
@@ -2202,7 +2202,7 @@ Elm.Elmsweep.make = function (_elm) {
                {case "_Tuple2":
                   return $Basics.not(_v63._1.seen) && $Basics.not(_v63._1.flag);}
                _U.badCase($moduleName,
-               "on line 339, column 35 to 59");
+               "on line 337, column 35 to 59");
             }();
          },
          A2($List.filterMap,
@@ -2226,7 +2226,7 @@ Elm.Elmsweep.make = function (_elm) {
                     _v67._0,
                     bo) : _L.fromArray([]);}
                _U.badCase($moduleName,
-               "between lines 341 and 342");
+               "between lines 339 and 340");
             }();
          },
          cs));
@@ -2239,7 +2239,7 @@ Elm.Elmsweep.make = function (_elm) {
                     _v71._0,
                     bo1);}
                _U.badCase($moduleName,
-               "on line 343, column 39 to 53");
+               "on line 341, column 39 to 53");
             }();
          }),
          bo,
@@ -2251,7 +2251,7 @@ Elm.Elmsweep.make = function (_elm) {
                {case "_Tuple2":
                   return $Basics.not(_v75._1.safe);}
                _U.badCase($moduleName,
-               "on line 344, column 34 to 44");
+               "on line 342, column 34 to 44");
             }();
          },
          cs);
@@ -2294,7 +2294,7 @@ Elm.Elmsweep.make = function (_elm) {
               A2(adjacent,p,bo)),
               bo);}
          _U.badCase($moduleName,
-         "between lines 301 and 308");
+         "between lines 299 and 306");
       }();
    });
    var Cell = F4(function (a,
@@ -2431,7 +2431,7 @@ Elm.Elmsweep.make = function (_elm) {
                  return won ? Won : lost ? Lost : Play;
               }();}
          _U.badCase($moduleName,
-         "between lines 177 and 183");
+         "between lines 175 and 181");
       }();
    };
    var ShowAdjacent = function (a) {
@@ -2567,7 +2567,7 @@ Elm.Elmsweep.make = function (_elm) {
                  return _v109._1;
               }();}
          _U.badCase($moduleName,
-         "between lines 54 and 56");
+         "between lines 43 and 45");
       }();
    };
    var clicks = function (s) {
@@ -2641,7 +2641,7 @@ Elm.Elmsweep.make = function (_elm) {
          var done = won || lost;
          var _raw = gs.board,
          $ = _raw.ctor === "Board" ? _raw : _U.badCase($moduleName,
-         "on line 189, column 27 to 35"),
+         "on line 187, column 27 to 35"),
          w = $._0,
          h = $._1,
          arr = $._2;
@@ -2679,7 +2679,7 @@ Elm.Elmsweep.make = function (_elm) {
                                        won,
                                        _v116._1);}
                                   _U.badCase($moduleName,
-                                  "on line 208, column 38 to 57");
+                                  "on line 206, column 38 to 57");
                                }();
                             },
                             row0));
@@ -2731,14 +2731,7 @@ Elm.Elmsweep.make = function (_elm) {
    gameStates)));
    var main = A2($Signal.map,
    display,
-   A3($Signal.foldp,
-   update,
-   defaultGame,
-   $Signal.mergeMany(_L.fromArray([A2($Signal.map,
-                                  InitGame,
-                                  initGame)
-                                  ,clicks($Time.timestamp($Signal.subscribe(commands)))
-                                  ,times]))));
+   gameStates);
    _elm.Elmsweep.values = {_op: _op
                           ,main: main
                           ,gameStates: gameStates
