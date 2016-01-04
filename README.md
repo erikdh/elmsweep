@@ -14,4 +14,4 @@ flags matches the number of surrounding mines.
 
 ## Build
 
-elm-make Elmsweep.elm
+elm-make Elmsweep.elm --yes --output elm.js

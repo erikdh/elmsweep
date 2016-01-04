@@ -1,23 +1,18 @@
 module Elmsweep where
 
 import Signal
-import Time as T
-import Time (Time)
-import String
+import Time as T exposing (Time)
 import List as L
-import Set as S
-import Set (Set)
+import Set as S exposing (Set)
 import Random as R
-import Html as H
-import Html (Html)
+import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.Lazy as HL
-import Array as A
-import Array (Array)
-import Trampoline as TR
-import Trampoline (Trampoline)
+import Array as A exposing (Array)
 import Maybe as M
+import VirtualDom
+import Json.Decode as Json exposing (..)
 
 main: Signal Html
 main = Signal.map display gameStates
@@ -27,14 +22,14 @@ main = Signal.map display gameStates
 gameStates: Signal GameState
 gameStates = 
     Signal.foldp update defaultGame
-          (Signal.mergeMany [Signal.map InitGame initGame,
-                             clicks (T.timestamp (Signal.subscribe commands)),
+            (Signal.mergeMany [Signal.map InitGame initGame,
+                             clicks (T.timestamp (commands.signal)),
                              times])
 
 port initGame: Signal (Int, Int, Int, Int)
 
-commands: Signal.Channel Command
-commands = Signal.channel Restart
+commands: Signal.Mailbox Command
+commands = Signal.mailbox Restart
 
 times: Signal Command
 times = Signal.map Timer (T.every (1 * T.second))
@@ -47,13 +42,14 @@ click (t, cmd) = case cmd of
 clicks: Signal (Time, Command) -> Signal Command
 clicks s = Signal.map click s
 
+
 -- OUTPUTS
 
 port wonGame: Signal (Int, Int, Int, Time)
 port wonGame = Signal.map (\gs -> (width gs.board, height gs.board, gs.nmine,
                                          T.inSeconds(gs.timeReached -
                                                      gs.timeStart)))
-               (Signal.keepIf (\gs -> not gs.sent && gs.status == Won)
+               (Signal.filter (\gs -> not gs.sent && gs.status == Won)
                       defaultGame gameStates)
 
 -- MODEL
@@ -117,10 +113,10 @@ defaultGame = makeNewGame 0 0 0 0
 randomMineIndices: Int -> R.Generator Int -> R.Seed -> (List Int, R.Seed)
 randomMineIndices n gen seed =
     let go m seed0 acc =
-        if | m == n -> (S.toList acc, seed0)
-           | otherwise -> let (i, seed1) = R.generate gen seed0
-                          in if | S.member i acc -> go m seed1 acc
-                                | otherwise -> go (m + 1) seed1 (S.insert i acc)
+        if m == n then (S.toList acc, seed0)
+        else let (i, seed1) = R.generate gen seed0
+             in if S.member i acc then go m seed1 acc
+                else go (m + 1) seed1 (S.insert i acc)
     in go 0 seed S.empty
 
 randomMines: Int -> Int -> Int -> R.Seed -> (R.Seed, List Bool)
@@ -136,12 +132,12 @@ randomGame gs =
         w = width bo
         h = height bo
         (seed, mines) = randomMines w h gs.nmine gs.seed
-    in {gs | board <- makeBoard w h mines
-           , timeStart <- 0
-           , timeReached <- 0
-           , seed <- seed
-           , status <- Play
-           , sent <- False}
+    in {gs | board = makeBoard w h mines
+           , timeStart = 0
+           , timeReached = 0
+           , seed = seed
+           , status = Play
+           , sent = False}
 
 width: Board -> Int
 width (Board w _ _) = w
@@ -176,9 +172,9 @@ status (Board _ _ arr) =
             A.foldl (\c r -> r && ((c.safe && c.seen) ||
                                    ((not c.safe) && (not c.seen)))) True arr
         lost = A.foldl (\c r -> r || ((not c.safe) && c.seen)) False arr
-    in if | won -> Won
-          | lost -> Lost
-          | otherwise -> Play
+    in if won then Won
+       else if lost then Lost
+       else Play
 
 -- DISPLAY
 
@@ -189,8 +185,8 @@ display gs =
         lost = gameLost gs
         done = won || lost
         flagsUsed bo = A.length (A.filter (\c -> c.flag) bo)
-        flag = toString (if | gs.timeReached == 0 -> gs.nmine
-                            | otherwise -> gs.nmine - flagsUsed arr)
+        flag = toString (if gs.timeReached == 0 then gs.nmine
+                         else gs.nmine - flagsUsed arr)
         time = toString (round (T.inSeconds (gs.timeReached - gs.timeStart)))
         rows = split w (A.toIndexedList arr)
     in if gs.nmine == 0 then H.text "" else
@@ -212,9 +208,9 @@ screen str =
 statusScreen: String -> Html
 statusScreen str =
     H.div [HA.class "esw-status",
-         HE.onClick (Signal.send commands Restart)]
+         HE.onClick commands.address Restart]
         [H.div [HA.class "esw-rotate-90"]
-             [H.span [HA.class "esw-noselect"] [H.text str]]]
+            [H.span [HA.class "esw-noselect"] [H.text str]]]
 
 button: Pos -> Bool -> Bool -> Cell -> Html
 button i done won c =
@@ -222,17 +218,17 @@ button i done won c =
         down = str /= ""
     in H.div [HA.class (if down then "esw-cell esw-cell-down"
                   else "esw-cell esw-cell-up"),
-            HE.onClick (Signal.send commands (show i)),
-            HE.messageOn "dblclick" (Signal.send commands (showAdjacent i)),
-            HE.messageOn "contextmenu" (Signal.send commands (flag i))]
+            HE.onClick commands.address (show i),
+            messageOn "dblclick" commands.address (showAdjacent i),
+            messageOn "contextmenu" commands.address (flag i)]
            [H.span [fieldClass str]
-                 [H.text (if str == "0" || str == "B" || str == "W" ||
-                             str == "F" || str == "X" then "" else str)]]
+               [H.text (if str == "0" || str == "B" || str == "W" ||
+                           str == "F" || str == "X" then "" else str)]]
 
 statusString: Bool -> Bool -> String
-statusString won lost = if | won -> ":D"
-                           | lost -> ":("
-                           | otherwise -> ":)"
+statusString won lost = if won then ":D"
+                        else if lost then ":("
+                        else ":)"
 
 fieldString: Bool -> Bool -> Cell -> String
 fieldString done won c =
@@ -245,14 +241,18 @@ fieldString done won c =
       (False, False, True,  _,     _) -> "F"
       (False, False, False, True,  _) -> if won then "F" else "B"
       (False, False, False, False, _) -> ""
-      _                               -> "U"
+
 
 fieldClass: String -> H.Attribute
-fieldClass str = if | str == "B" -> HA.class "esw-noselect esw-bomb"
-                    | str == "F" -> HA.class "esw-noselect esw-flag"
-                    | str == "W" -> HA.class "esw-noselect esw-wrong"
-                    | str == "X" -> HA.class "esw-noselect esw-explode"
-                    | otherwise -> HA.class "esw-noselect"
+fieldClass str = if str == "B" then
+                   HA.class "esw-noselect esw-bomb"
+                 else if str == "F" then
+                   HA.class "esw-noselect esw-flag"
+                 else if str == "W" then
+                   HA.class "esw-noselect esw-wrong"
+                 else if str == "X" then
+                   HA.class "esw-noselect esw-explode"
+                 else HA.class "esw-noselect"
 
 -- UPDATE
 
@@ -262,29 +262,29 @@ update cmd gs =
         case cmd of
           Restart -> randomGame gs
           InitGame (w, h, n, seed) -> randomGame (makeNewGame w h n seed)
-          _ -> {gs | sent <- True}
+          _ -> {gs | sent = True}
     else case cmd of
            Click (Just t) (Show i) ->
                let gs0 = if gs.timeStart == 0 then
-                             {gs | timeReached <- t
-                                 , timeStart <- t}
+                             {gs | timeReached = t
+                                 , timeStart = t}
                          else gs
                    bo0 = updateClick (Show i) i gs0.board
-               in {gs0 | board <- bo0
-                       , status <- status bo0}
+               in {gs0 | board = bo0
+                       , status = status bo0}
            Click t (Flag i) -> let bo0 = updateClick (Flag i) i gs.board
-                               in {gs | board <- bo0
-                                      , status <- status bo0}
+                               in {gs | board = bo0
+                                      , status = status bo0}
            Click t (ShowAdjacent i) ->
                if canShowAdjacent i gs.board then
                    let bo0 = updateClick (ShowAdjacent i) i gs.board
-                   in {gs | board <- bo0
-                          , status <- status bo0}
+                   in {gs | board = bo0
+                          , status = status bo0}
                else gs
            Restart -> randomGame gs
            InitGame (w, h, n, seed) -> randomGame (makeNewGame w h n seed)
            Timer t -> if gs.timeStart == 0 then gs
-                      else {gs | timeReached <- t}
+                      else {gs | timeReached = t}
            _ -> gs
 
 canShowAdjacent: Pos -> Board -> Bool
@@ -299,7 +299,7 @@ updateClick cmd p bo =
     case cmd of
       Show _ -> updateShow [p] bo
       Flag _ -> updateCell p
-                (\c -> {c | flag <- not c.flag && not c.seen}) bo
+                (\c -> {c | flag = not c.flag && not c.seen}) bo
       ShowAdjacent _ -> updateShow (L.filter
                                     (\p -> case getCell p bo of
                                              Just c -> not (c.seen || c.flag)
@@ -315,7 +315,7 @@ updateShowCascadeCell p bo =
                 else  (bo, [])
       Nothing -> (bo, [])
 
-updateShowCascade: List Pos -> Set Pos -> Board -> Trampoline Board
+updateShowCascade: List Pos -> Set Pos -> Board -> Board
 updateShowCascade acc set bo =
      case acc of
        p::cc -> let (bo0, acc0) = updateShowCascadeCell p bo
@@ -324,13 +324,12 @@ updateShowCascade acc set bo =
                         L.foldl (\p0 (bo2, acc2) ->
                                  case updateShowCascadeCell p0 bo2 of
                                    (bo3, acc3) -> (bo3, L.append acc3 acc2))
-                                 (bo0, []) acx
+                           (bo0, []) acx
                     accn = L.append acc0 acc1
                     new = S.diff (S.fromList accn) set
-                in TR.Continue (\() -> updateShowCascade
-                                               (L.append cc (S.toList new))
-                                               (S.union new set) bo1)
-       [] -> TR.Done bo
+                in updateShowCascade
+                     (L.append cc (S.toList new)) (S.union new set) bo1
+       [] -> bo
 
 updateShow: List Pos -> Board -> Board
 updateShow ps bo =
@@ -341,8 +340,7 @@ updateShow ps bo =
         bo0 = L.foldl (\(p, _) bo1 -> showCell p bo1) bo cs
         done = L.any (\(p, c) -> not c.safe) cs
     in if done then bo0
-       else TR.trampoline (updateShowCascade (S.toList (S.fromList adj))
-                                             S.empty bo0)
+       else updateShowCascade (S.toList (S.fromList adj)) S.empty bo0
 
 adjacentCells: Pos -> Board -> List (Pos, Cell)
 adjacentCells p bo = L.filterMap (\p0 -> M.map ((,) p0) (getCell p0 bo))
@@ -361,10 +359,16 @@ getCell p (Board w h arr) = A.get p arr
 
 showCell: Pos -> Board -> Board
 showCell p bo =
-    updateCell p (\c -> if not c.flag then {c | seen <- True} else c) bo
+    updateCell p (\c -> if not c.flag then {c | seen = True} else c) bo
 
 -- UTIL
 
 split: Int -> List a -> List (List a)
 split n lls = case lls of (l::ls) -> L.take n lls :: (split n (L.drop n lls))
                           [] -> []
+
+-- ELM HTML internal
+
+messageOn : String -> Signal.Address a -> a -> H.Attribute
+messageOn name addr msg =
+  VirtualDom.on name value (\_ -> Signal.message addr msg)
